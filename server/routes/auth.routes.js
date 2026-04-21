@@ -2,6 +2,7 @@ import bcrypt from "bcrypt";
 import { z } from "zod";
 import { insertUserSchema } from "../../shared/schema.js";
 import { sanitizeUser, sendZodError } from "./helpers.js";
+import { ensureCsrfToken } from "../middleware/security.js";
 
 export function registerAuthRoutes(app, { storage }) {
   app.post("/api/auth/signup", async (req, res) => {
@@ -25,11 +26,12 @@ export function registerAuthRoutes(app, { storage }) {
       req.session.userId = user.id;
       req.session.userRole = user.role;
       req.session.userName = user.name;
+      const csrfToken = ensureCsrfToken(req);
 
       if (typeof storage.createActivityLog === "function") {
         await storage.createActivityLog(user.id, user.name, "signup", `New ${user.role} account created`);
       }
-      res.status(201).json(sanitizeUser(user));
+      res.status(201).json({ ...sanitizeUser(user), csrfToken });
     } catch (err) {
       return sendZodError(res, err);
     }
@@ -58,11 +60,12 @@ export function registerAuthRoutes(app, { storage }) {
       req.session.userId = user.id;
       req.session.userRole = user.role;
       req.session.userName = user.name;
+      const csrfToken = ensureCsrfToken(req);
 
       if (typeof storage.createActivityLog === "function") {
         await storage.createActivityLog(user.id, user.name, "signin", `${user.role} signed in`);
       }
-      res.json(sanitizeUser(user));
+      res.json({ ...sanitizeUser(user), csrfToken });
     } catch (err) {
       return sendZodError(res, err);
     }
@@ -89,6 +92,16 @@ export function registerAuthRoutes(app, { storage }) {
       return res.status(401).json({ message: "User not found" });
     }
 
-    res.json(sanitizeUser(user));
+    const csrfToken = ensureCsrfToken(req);
+    res.json({ ...sanitizeUser(user), csrfToken });
+  });
+
+  app.get("/api/auth/csrf-token", (req, res) => {
+    if (!req.session?.userId) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+
+    const csrfToken = ensureCsrfToken(req);
+    return res.json({ csrfToken });
   });
 }

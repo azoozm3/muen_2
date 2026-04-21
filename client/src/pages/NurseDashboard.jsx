@@ -1,5 +1,3 @@
-import { ClipboardList, UserCircle } from "lucide-react";
-import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { LoadingScreen } from "@/components/common/LoadingScreen";
 import {
@@ -7,15 +5,12 @@ import {
   ProviderDashboardShell,
   ProviderDashboardTabPanel,
   ProviderDashboardTabs,
-  ProviderHeaderAction,
-  ProviderInfoBanner,
 } from "@/features/provider-dashboard/ProviderDashboardLayout";
 import { ActiveNurseVisitsTab, NewNurseRequestsTab, NurseVisitHistoryTab } from "@/features/nurse-requests/provider/NurseDashboardSections";
 import { useNurseDashboard } from "@/features/nurse-requests/provider/useNurseDashboard";
 
 export default function NurseDashboard() {
   const { user } = useAuth();
-  const [, navigate] = useLocation();
   const dashboard = useNurseDashboard(user);
 
   if (dashboard.isLoading) return <LoadingScreen className="min-h-[50vh]" />;
@@ -25,11 +20,7 @@ export default function NurseDashboard() {
       <ProviderDashboardHeader
         title="Nurse Care Dashboard"
         description={`Welcome, ${user?.name}. Review home-care requests, patient records, and complete visit reports.`}
-
       />
-
-
-
       <ProviderDashboardTabs value={dashboard.activeTab} onValueChange={dashboard.setActiveTab} tabs={dashboard.tabs}>
         <ProviderDashboardTabPanel value="new">
           <NewNurseRequestsTab items={dashboard.groups.pending} onAccept={(item) => dashboard.respond(item, "accepted")} isPending={dashboard.respondMutation.isPending} />

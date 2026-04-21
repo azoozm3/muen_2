@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { queryClient } from "@/lib/queryClient";
+import { apiRequest, queryClient, readJsonResponse } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useServiceSettings } from "@/hooks/use-service-settings";
 import { AppointmentDetailsCard } from "./appointment-form/AppointmentDetailsCard";
@@ -17,14 +17,8 @@ export default function BookAppointmentForm({ doctor, onSuccess, onCancel }) {
   const finalizeBooking = async (paymentOrderId) => {
     try {
       setIsSubmitting(true);
-      const res = await fetch("/api/appointments", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ doctorId, doctorName: doctor.name, specialty: doctor.specialty || "", date: form.date, time: form.time, reason: form.reason, appointmentType: form.appointmentType, paymentOrderId }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.message || "Failed to book appointment");
+      const res = await apiRequest("POST", "/api/appointments", { doctorId, doctorName: doctor.name, specialty: doctor.specialty || "", date: form.date, time: form.time, reason: form.reason, appointmentType: form.appointmentType, paymentOrderId });
+      const data = await readJsonResponse(res, "Failed to book appointment");
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["/api/appointments"] }),
         queryClient.invalidateQueries({ queryKey: ["/api/appointments", "patient"] }),

@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, readJsonResponse } from "@/lib/queryClient";
 import { liveQueryOptions } from "@/lib/liveQuery";
 
 export function useVolunteerRequests() {
@@ -15,7 +15,7 @@ function useVolunteerMutation(method, getUrl) {
   return useMutation({
     mutationFn: async ({ id, body }) => {
       const response = await apiRequest(method, getUrl(id), body);
-      return response.json();
+      return readJsonResponse(response, "Volunteer request operation failed");
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/volunteer-requests"] });

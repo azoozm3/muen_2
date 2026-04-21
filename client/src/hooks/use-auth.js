@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, updateCsrfToken } from "@/lib/queryClient";
 import { staticQueryOptions } from "@/lib/liveQuery";
 
 export function getRoleDashboardPath(role) {
@@ -25,6 +25,7 @@ export function useAuth() {
       return response.json();
     },
     onSuccess: (user) => {
+      updateCsrfToken(user?.csrfToken);
       queryClient.setQueryData(["/api/auth/me"], user);
     },
   });
@@ -35,6 +36,7 @@ export function useAuth() {
       return response.json();
     },
     onSuccess: (user) => {
+      updateCsrfToken(user?.csrfToken);
       queryClient.setQueryData(["/api/auth/me"], user);
     },
   });
@@ -45,6 +47,7 @@ export function useAuth() {
       return response.json();
     },
     onSuccess: () => {
+      updateCsrfToken(null);
       queryClient.setQueryData(["/api/auth/me"], null);
       queryClient.clear();
       queryClient.setQueryData(["/api/auth/me"], null);

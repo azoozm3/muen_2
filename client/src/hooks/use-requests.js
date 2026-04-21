@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, fetchJson } from "@/lib/queryClient";
 import { liveQueryOptions } from "@/lib/liveQuery";
 import { ensureRequestId, patchEmergencyRequest, readJson, useEmergencyMutation } from "./requestMutationHelpers";
 
@@ -22,7 +22,7 @@ export function useRequest(requestId) {
   return useQuery({
     queryKey: ["/api/requests", requestId],
     enabled: !!requestId,
-    queryFn: async () => readJson(await fetch(`/api/requests/${requestId}`, { credentials: "include" }), "Failed to load request"),
+    queryFn: () => fetchJson(`/api/requests/${requestId}`, "Failed to load request"),
     ...liveQueryOptions(),
   });
 }

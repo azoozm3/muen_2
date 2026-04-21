@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { loadPaypalSdk } from "./sdk";
+import { apiRequest, readJsonResponse } from "@/lib/queryClient";
 
 export function usePaypalButtonRender({ ref, clientId, currency, serviceKey, renderedKey, buttonsActionsRef, disabledRef, validateRef, onApprovedRef, onErrorRef, setLoading, setError }) {
   useEffect(() => {
@@ -40,25 +41,13 @@ export function usePaypalButtonRender({ ref, clientId, currency, serviceKey, ren
           },
           createOrder: async () => {
             if (!canContinue()) throw new Error("Complete the form first");
-            const res = await fetch("/api/payments/orders", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              credentials: "include",
-              body: JSON.stringify({ serviceKey }),
-            });
-            const data = await res.json();
-            if (!res.ok) throw new Error(data?.message || "Failed to create PayPal order");
+            const res = await apiRequest("POST", "/api/payments/orders", { serviceKey });
+            const data = await readJsonResponse(res, "Failed to create PayPal order");
             return data.orderId;
           },
           onApprove: async (data) => {
-            const res = await fetch("/api/payments/capture", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              credentials: "include",
-              body: JSON.stringify({ orderId: data.orderID, serviceKey }),
-            });
-            const result = await res.json();
-            if (!res.ok) throw new Error(result?.message || "Failed to capture payment");
+            const res = await apiRequest("POST", "/api/payments/capture", { orderId: data.orderID, serviceKey });
+            const result = await readJsonResponse(res, "Failed to capture payment");
             await onApprovedRef.current?.(data.orderID, result);
           },
           onError: (err) => fail(err?.message || "PayPal failed"),

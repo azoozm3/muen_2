@@ -5,14 +5,20 @@ import { MongoStore } from "connect-mongo";
 import { createServer } from "http";
 
 import { connectDB } from "./db.js";
-import { serverEnv, isProduction } from "./config/app-env.js";
+import { hasCustomSessionSecret, serverEnv, isProduction } from "./config/app-env.js";
 import { registerRoutes } from "./routes.js";
 import { serveStatic } from "./static.js";
+import { apiRateLimit, csrfProtection } from "./middleware/security.js";
 
 const app = express();
 const httpServer = createServer(app);
+const isProdBuild = process.env.NODE_ENV === "production";
 
-if (isProduction) {
+if (isProduction && !hasCustomSessionSecret) {
+  throw new Error("SESSION_SECRET must be configured in production");
+}
+
+if (isProdBuild) {
   app.set("trust proxy", 1);
 }
 
@@ -37,12 +43,18 @@ app.use(
     }),
     cookie: {
       httpOnly: true,
-      secure: isProduction,
+      secure: isProdBuild,
       sameSite: "lax",
       maxAge: 7 * 24 * 60 * 60 * 1000,
     },
   }),
 );
+
+app.use(apiRateLimit({ windowMs: 60_000, max: 120, keyPrefix: "api" }));
+app.use("/api/auth/signin", apiRateLimit({ windowMs: 60_000, max: 12, keyPrefix: "signin" }));
+app.use("/api/auth/signup", apiRateLimit({ windowMs: 60_000, max: 10, keyPrefix: "signup" }));
+app.use("/api/requests", apiRateLimit({ windowMs: 60_000, max: 40, keyPrefix: "requests" }));
+app.use(csrfProtection);
 
 export function log(message, source = "express") {
   const formattedTime = new Date().toLocaleTimeString("en-US", {
@@ -56,6 +68,7 @@ export function log(message, source = "express") {
 }
 
 function summarizeResponse(body) {
+  if (!serverEnv.enableApiResponseBodyLogging) return "";
   if (body == null) return "";
   try {
     const text = JSON.stringify(body);
@@ -106,10 +119,11 @@ app.use((req, res, next) => {
     res.status(status).json({ message });
   });
 
-  if (isProduction) {
+  if (isProdBuild) {
     serveStatic(app);
   } else {
-    const { setupVite } = await import("./vite.js");
+    const viteModulePath = "./vite.js";
+    const { setupVite } = await import(viteModulePath);
     await setupVite(httpServer, app);
   }
 

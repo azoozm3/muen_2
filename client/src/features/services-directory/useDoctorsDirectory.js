@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { fetchJson } from "@/lib/queryClient";
 
 export function useDoctorsDirectory() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -19,11 +20,7 @@ export function useDoctorsDirectory() {
 
   const doctorsQuery = useQuery({
     queryKey: ["/api/doctors", selectedSpecialty, searchQuery, minRating, onlineOnly],
-    queryFn: async () => {
-      const res = await fetch(`/api/doctors?${queryString}`, { credentials: "include" });
-      if (!res.ok) throw new Error("Failed to fetch doctors");
-      return res.json();
-    },
+    queryFn: () => fetchJson(`/api/doctors?${queryString}`, "Failed to fetch doctors"),
     staleTime: 10000,
   });
 

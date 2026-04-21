@@ -1,12 +1,12 @@
 import { useLocation } from "wouter";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Loader2, Save } from "lucide-react";
+import { Loader2, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useEditableSyncState } from "@/hooks/use-editable-sync-state";
 import { useToast } from "@/hooks/use-toast";
 import { liveQueryOptions } from "@/lib/liveQuery";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, fetchJson } from "@/lib/queryClient";
 import HealthRecordEditor from "@/features/health-record/HealthRecordEditor";
 import { normalizeMedicalHistory } from "@/features/health-record/utils";
 
@@ -17,11 +17,7 @@ export default function PatientHealthRecord() {
 
   const { data: profile, isLoading } = useQuery({
     queryKey: ["/api/profiles/me"],
-    queryFn: async () => {
-      const res = await fetch("/api/profiles/me", { credentials: "include" });
-      if (!res.ok) throw new Error("Failed to load profile");
-      return res.json();
-    },
+    queryFn: () => fetchJson("/api/profiles/me", "Failed to load profile"),
     ...liveQueryOptions(),
   });
 
@@ -57,8 +53,6 @@ export default function PatientHealthRecord() {
   return (
     <div className="app-page-shell">
       <div className="app-page-container max-w-5xl">
-
-
         <div className="mb-6 rounded-3xl border bg-white p-4 shadow-sm sm:p-6">
           <h1 className="text-2xl font-bold sm:text-3xl">My Health Record</h1>
           <p className="mt-2 text-sm text-muted-foreground sm:text-base">Keep your medical details ready for appointments.</p>

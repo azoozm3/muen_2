@@ -1,6 +1,8 @@
 import bcrypt from "bcrypt";
 import { doctorSeedData, reviewerNames, reviewComments } from "./data.js";
 
+const DEFAULT_SEED_DOCTOR_PASSWORD = "doctor123";
+
 function randomPhone() {
   return `+1-555-${Math.floor(1000 + Math.random() * 9000)}`;
 }
@@ -38,7 +40,8 @@ async function seedDoctors(storage) {
     return;
   }
 
-  const passwordHash = await bcrypt.hash("doctor123", 10);
+  const doctorPassword = process.env.SEED_DOCTOR_PASSWORD || DEFAULT_SEED_DOCTOR_PASSWORD;
+  const passwordHash = await bcrypt.hash(doctorPassword, 10);
   for (const doctorData of doctorSeedData) {
     const doctor = await storage.createUser(doctorData.name, doctorData.email, passwordHash, "doctor");
     await storage.updateProfile(doctor.id, {
@@ -52,9 +55,10 @@ async function seedDoctors(storage) {
 }
 
 export async function seedDatabase(storage) {
+  const adminSeedPassword = process.env.SEED_ADMIN_PASSWORD;
   const adminExists = await storage.getUserByEmail("admin@muen.com");
-  if (!adminExists) {
-    const passwordHash = await bcrypt.hash("admin123", 10);
+  if (!adminExists && adminSeedPassword) {
+    const passwordHash = await bcrypt.hash(adminSeedPassword, 10);
     await storage.createUser("System Admin", "admin@muen.com", passwordHash, "admin");
   }
 

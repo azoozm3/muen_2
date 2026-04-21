@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { StatusBadge } from "@/components/StatusBadge";
 import { PatientRouteTracker } from "@/components/patient/PatientRouteTracker";
+import { apiRequest, readJsonResponse } from "@/lib/queryClient";
 import { ACTIVE_REQUEST_STORAGE_KEY, CLOSED_REQUEST_STATUSES } from "./patientConstants";
 import { getRequestStatusMessage, getRequestStatusTitle } from "./patientUtils";
 import { DoctorRatingForm } from "./status-card/DoctorRatingForm";
@@ -28,14 +29,8 @@ export function PatientStatusCard({ request, navigate, updateStatus, setActiveRe
 
     try {
       setIsSavingReview(true);
-      const res = await fetch(`/api/requests/${requestId}/review`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ rating, comment }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data?.message || "Failed to save review");
+      const res = await apiRequest("POST", `/api/requests/${requestId}/review`, { rating, comment });
+      await readJsonResponse(res, "Failed to save review");
       toast({ title: "Doctor rating saved" });
       navigate("/dashboard/patient");
     } catch (error) {

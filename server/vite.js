@@ -1,5 +1,4 @@
 import { createServer as createViteServer, createLogger } from "vite";
-import viteConfig from "../vite.config.js";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -11,6 +10,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 export async function setupVite(server, app) {
+  const { default: viteConfig } = await import("../vite.config.js");
+
   const serverOptions = {
     middlewareMode: true,
     hmr: { server, path: "/vite-hmr" },

@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "node server/index.js",
     "build": "node script/build.js",
-    "start": "node dist/index.cjs"
+    "start": "node dist/index.cjs",
+    "seed": "node server/scripts/seed.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

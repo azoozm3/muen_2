@@ -7,19 +7,11 @@ import {
   useRateVolunteerRequest,
   useVolunteerRequests,
 } from "@/hooks/use-volunteer-requests";
-import { volunteerServices } from "@/features/volunteer/volunteerUtils";
-
-const INITIAL_FORM = {
-  patientName: "",
-  patientPhone: "",
-  serviceType: volunteerServices[0],
-  urgency: "medium",
-  address: "",
-  latitude: null,
-  longitude: null,
-  locationNote: "",
-  details: "",
-};
+import {
+  applyUserDefaults,
+  INITIAL_VOLUNTEER_REQUEST_FORM,
+  splitVolunteerRequests,
+} from "./volunteerRequestPageUtils";
 
 export function usePatientVolunteerRequestsPage() {
   const { toast } = useToast();
@@ -31,29 +23,13 @@ export function usePatientVolunteerRequestsPage() {
 
   const [showForm, setShowForm] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
-  const [form, setForm] = useState(INITIAL_FORM);
+  const [form, setForm] = useState(INITIAL_VOLUNTEER_REQUEST_FORM);
 
   useEffect(() => {
-    setForm((current) => ({
-      ...current,
-      patientName: current.patientName || user?.name || "",
-      patientPhone: current.patientPhone || user?.phone || "",
-    }));
+    setForm((current) => applyUserDefaults(current, user));
   }, [user?.name, user?.phone]);
 
-  const current = useMemo(
-    () =>
-      data.filter((item) =>
-        ["pending", "accepted", "in_progress"].includes(item.status),
-      ),
-    [data],
-  );
-
-  const history = useMemo(
-    () =>
-      data.filter((item) => ["completed", "cancelled"].includes(item.status)),
-    [data],
-  );
+  const { current, history } = useMemo(() => splitVolunteerRequests(data), [data]);
 
   const updateForm = (key, value) => {
     setForm((currentValue) => ({ ...currentValue, [key]: value }));
@@ -105,7 +81,7 @@ export function usePatientVolunteerRequestsPage() {
       await createMutation.mutateAsync({ body: form });
 
       setForm((currentValue) => ({
-        ...INITIAL_FORM,
+        ...INITIAL_VOLUNTEER_REQUEST_FORM,
         patientName: currentValue.patientName,
         patientPhone: currentValue.patientPhone,
       }));

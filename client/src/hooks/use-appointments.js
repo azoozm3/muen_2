@@ -1,15 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { liveQueryOptions } from "@/lib/liveQuery";
+import { fetchJson } from "@/lib/queryClient";
 
 async function fetchAppointments(url) {
-  const response = await fetch(url, { credentials: "include" });
-
-  if (!response.ok) {
-    const payload = await response.json().catch(() => null);
-    throw new Error(payload?.message || "Failed to fetch appointments");
-  }
-
-  return response.json();
+  return fetchJson(url, "Failed to fetch appointments");
 }
 
 export function usePatientAppointments() {
