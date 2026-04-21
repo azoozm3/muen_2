@@ -4,11 +4,9 @@ import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { useDoctorAppointments } from "@/hooks/use-appointments";
 import DoctorAppointmentCard from "@/features/appointments/doctor/DoctorAppointmentCard";
-import AppointmentsHeader from "@/features/appointments/shared/AppointmentsHeader";
-import AppointmentsSection from "@/features/appointments/shared/AppointmentsSection";
+import AppointmentsPageLayout from "@/features/appointments/shared/AppointmentsPageLayout";
+import { APPOINTMENT_HISTORY_STATUSES } from "@/features/appointments/shared/appointmentStatusSets";
 import { useDoctorAppointmentActions } from "@/features/appointments/doctor/useDoctorAppointmentActions";
-
-const HISTORY_STATUSES = new Set(["completed", "rejected", "cancelled"]);
 
 export default function DoctorAppointments() {
   const { user } = useAuth();
@@ -16,8 +14,8 @@ export default function DoctorAppointments() {
   const { data: appointments = [], isLoading } = useDoctorAppointments();
   const actions = useDoctorAppointmentActions();
 
-  const currentAppointments = useMemo(() => appointments.filter((item) => !HISTORY_STATUSES.has(item.status)), [appointments]);
-  const historyAppointments = useMemo(() => appointments.filter((item) => HISTORY_STATUSES.has(item.status)), [appointments]);
+  const currentAppointments = useMemo(() => appointments.filter((item) => !APPOINTMENT_HISTORY_STATUSES.has(item.status)), [appointments]);
+  const historyAppointments = useMemo(() => appointments.filter((item) => APPOINTMENT_HISTORY_STATUSES.has(item.status)), [appointments]);
   const updatePending = actions.respondMutation.isPending || actions.completeMutation.isPending;
 
   const handleStatusChange = (appointment, nextStatus) => {
@@ -48,37 +46,27 @@ export default function DoctorAppointments() {
   );
 
   return (
-    <div className="app-page-shell">
-      <div className="app-page-container max-w-6xl">
-        <AppointmentsHeader
-          title="Appointments"
-          description="Review and manage your schedule."
-          userLabel={`Dr. ${user?.name || ""}`}
-          onProfileClick={() => navigate("/profile")}
-          ProfileIcon={UserCircle}
-        />
-
-        {isLoading ? (
-          <div className="text-muted-foreground">Loading...</div>
-        ) : (
-          <div className="space-y-8">
-            <AppointmentsSection
-              title="Current appointments"
-              description="Pending and confirmed appointments with available actions."
-              emptyText="No current appointments."
-              items={currentAppointments}
-              renderItem={(appointment) => renderCard(appointment)}
-            />
-            <AppointmentsSection
-              title="History"
-              description="Completed, cancelled, and rejected appointments."
-              emptyText="No appointment history yet."
-              items={historyAppointments}
-              renderItem={(appointment) => renderCard(appointment, true)}
-            />
-          </div>
-        )}
-      </div>
-    </div>
+    <AppointmentsPageLayout
+      title="Appointments"
+      description="Review and manage your schedule."
+      userLabel={`Dr. ${user?.name || ""}`}
+      onProfileClick={() => navigate("/profile")}
+      ProfileIcon={UserCircle}
+      isLoading={isLoading}
+      current={{
+        title: "Current appointments",
+        description: "Pending and confirmed appointments with available actions.",
+        emptyText: "No current appointments.",
+        items: currentAppointments,
+        renderItem: (appointment) => renderCard(appointment),
+      }}
+      history={{
+        title: "History",
+        description: "Completed, cancelled, and rejected appointments.",
+        emptyText: "No appointment history yet.",
+        items: historyAppointments,
+        renderItem: (appointment) => renderCard(appointment, true),
+      }}
+    />
   );
 }

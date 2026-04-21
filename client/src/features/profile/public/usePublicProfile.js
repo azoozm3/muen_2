@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation } from "wouter";
 import { readPublicProfileRoute } from "@/features/profile/public/publicProfilePaths";
+import { fetchJson } from "@/lib/queryClient";
 
 export function usePublicProfile(expectedRole) {
   const [location] = useLocation();
@@ -17,13 +18,7 @@ export function usePublicProfile(expectedRole) {
       setError("");
 
       try {
-        const response = await fetch(`/api/profiles/${profileId}`, { credentials: "include" });
-        const result = await response.json().catch(() => ({}));
-
-        if (!response.ok) {
-          throw new Error(result.message || "Failed to load profile");
-        }
-
+        const result = await fetchJson(`/api/profiles/${profileId}`, "Failed to load profile");
         if (isMounted) setData(result);
       } catch (loadError) {
         console.error("Public profile load error:", loadError);

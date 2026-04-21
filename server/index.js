@@ -5,12 +5,17 @@ import { MongoStore } from "connect-mongo";
 import { createServer } from "http";
 
 import { connectDB } from "./db.js";
-import { serverEnv, isProduction } from "./config/app-env.js";
+import { hasCustomSessionSecret, serverEnv, isProduction } from "./config/app-env.js";
 import { registerRoutes } from "./routes.js";
 import { serveStatic } from "./static.js";
+import { apiRateLimit, csrfProtection } from "./middleware/security.js";
 
 const app = express();
 const httpServer = createServer(app);
+
+if (isProduction && !hasCustomSessionSecret) {
+  throw new Error("SESSION_SECRET must be configured in production");
+}
 
 if (isProduction) {
   app.set("trust proxy", 1);
@@ -44,6 +49,12 @@ app.use(
   }),
 );
 
+app.use(apiRateLimit({ windowMs: 60_000, max: 120, keyPrefix: "api" }));
+app.use("/api/auth/signin", apiRateLimit({ windowMs: 60_000, max: 12, keyPrefix: "signin" }));
+app.use("/api/auth/signup", apiRateLimit({ windowMs: 60_000, max: 10, keyPrefix: "signup" }));
+app.use("/api/requests", apiRateLimit({ windowMs: 60_000, max: 40, keyPrefix: "requests" }));
+app.use(csrfProtection);
+
 export function log(message, source = "express") {
   const formattedTime = new Date().toLocaleTimeString("en-US", {
     hour: "numeric",
@@ -56,6 +67,7 @@ export function log(message, source = "express") {
 }
 
 function summarizeResponse(body) {
+  if (!serverEnv.enableApiResponseBodyLogging) return "";
   if (body == null) return "";
   try {
     const text = JSON.stringify(body);

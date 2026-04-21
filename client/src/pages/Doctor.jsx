@@ -1,4 +1,4 @@
-import { CalendarCheck, UserCircle } from "lucide-react";
+import { CalendarCheck } from "lucide-react";
 import { useLocation } from "wouter";
 import { LoadingScreen } from "@/components/common/LoadingScreen";
 import { ProviderDashboardHeader, ProviderDashboardShell, ProviderHeaderAction } from "@/features/provider-dashboard/ProviderDashboardLayout";
@@ -20,9 +20,7 @@ export default function DoctorDashboard() {
         description="Manage emergency cases, track routes, and support patients in real time."
         actions={(
           <>
-
             <ProviderHeaderAction icon={CalendarCheck} onClick={() => navigate("/dashboard/doctor/appointments")}>Appointments</ProviderHeaderAction>
-
           </>
         )}
       />

@@ -45,3 +45,4 @@ Default local server:
 - Do not commit `.env`
 - Use fresh `npm install` instead of sharing `node_modules`
 - PayPal falls back to mock mode when credentials are missing
+- Runtime seeding is disabled by default; run `npm run seed` explicitly for sample data

@@ -1,22 +1,10 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { apiRequest, fetchJson, queryClient } from "@/lib/queryClient";
 import { liveQueryOptions } from "@/lib/liveQuery";
 import { normalizeNurseRequests } from "@/features/nurse-requests/shared/requestStatus";
+import { readJson } from "./requestMutationHelpers";
 
 const QUERY_KEY = ["/api/nurse-requests"];
-
-async function readJson(response, fallbackMessage) {
-  let data = null;
-
-  try {
-    data = await response.json();
-  } catch {
-    data = null;
-  }
-
-  if (!response.ok) throw new Error(data?.message || fallbackMessage);
-  return data;
-}
 
 function invalidateNurseRequests() {
   return queryClient.invalidateQueries({ queryKey: QUERY_KEY });
@@ -25,10 +13,7 @@ function invalidateNurseRequests() {
 export function useNurseRequests() {
   return useQuery({
     queryKey: QUERY_KEY,
-    queryFn: async () => {
-      const response = await fetch("/api/nurse-requests", { credentials: "include" });
-      return readJson(response, "Failed to fetch nurse requests");
-    },
+    queryFn: () => fetchJson("/api/nurse-requests", "Failed to fetch nurse requests"),
     select: normalizeNurseRequests,
     ...liveQueryOptions(),
   });

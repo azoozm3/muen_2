@@ -1,6 +1,7 @@
 import { routeRegistrars } from "./routes/registry.js";
 import { seedDatabase } from "./seed/index.js";
 import { prepareStorage, storage } from "./storage.js";
+import { serverEnv } from "./config/app-env.js";
 
 export async function registerRoutes(httpServer, app) {
   const context = { storage };
@@ -9,7 +10,9 @@ export async function registerRoutes(httpServer, app) {
     registerRoute(app, context);
   }
 
-  await seedDatabase(storage);
+  if (serverEnv.allowRuntimeSeed) {
+    await seedDatabase(storage);
+  }
   await prepareStorage(storage);
 
   return httpServer;

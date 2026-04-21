@@ -1,21 +1,10 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { apiRequest, fetchJson, queryClient } from "@/lib/queryClient";
 import { liveQueryOptions } from "@/lib/liveQuery";
-
-async function fetchJson(url) {
-  const response = await fetch(url, { credentials: "include" });
-  const payload = await response.json().catch(() => null);
-
-  if (!response.ok) {
-    throw new Error(payload?.message || `Failed to load ${url}`);
-  }
-
-  return payload;
-}
 
 const createAdminQuery = (key, url, extras = {}) => ({
   queryKey: key,
-  queryFn: () => fetchJson(url),
+  queryFn: () => fetchJson(url, `Failed to load ${url}`),
   ...liveQueryOptions(),
   ...extras,
 });
